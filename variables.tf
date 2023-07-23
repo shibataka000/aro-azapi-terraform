@@ -99,7 +99,7 @@ variable "service_cidr" {
 
 variable "tags" {
   description = "(Optional) Specifies tags for all the resources"
-  default     = {
+  default = {
     createdWith = "Terraform"
     environment = "Development"
     department  = "Ops"
@@ -108,9 +108,9 @@ variable "tags" {
 
 variable "api_server_visibility" {
   description = "Specifies the API Server visibility for the Azure Red Hat OpenShift cluster."
-  default  = "Public" 
+  default     = "Public"
   validation {
-    condition = contains(["Private", "Public"], var.api_server_visibility)
+    condition     = contains(["Private", "Public"], var.api_server_visibility)
     error_message = "The value of the api_server_visibility parameter is invalid."
   }
 }
@@ -123,36 +123,36 @@ variable "ingress_profile_name" {
 
 variable "ingress_visibility" {
   description = "Specifies the ingress visibility for the Azure Red Hat OpenShift cluster."
-  default  = "Public" 
+  default     = "Public"
   validation {
-    condition = contains(["Private", "Public"], var.ingress_visibility)
+    condition     = contains(["Private", "Public"], var.ingress_visibility)
     error_message = "The value of the ingress_visibility parameter is invalid."
   }
 }
 
 variable "fips_validated_modules" {
   description = "Specifies whether FIPS validated crypto modules are used."
-  default  = "Disabled" 
+  default     = "Disabled"
   validation {
-    condition = contains(["Disabled", "Enabled"], var.fips_validated_modules)
+    condition     = contains(["Disabled", "Enabled"], var.fips_validated_modules)
     error_message = "The value of the fips_validated_modules parameter is invalid."
   }
 }
 
 variable "master_encryption_at_host" {
   description = "Specifies whether master virtual machines are encrypted at host."
-  default  = "Disabled" 
+  default     = "Disabled"
   validation {
-    condition = contains(["Disabled", "Enabled"], var.master_encryption_at_host)
+    condition     = contains(["Disabled", "Enabled"], var.master_encryption_at_host)
     error_message = "The value of the master_encryption_at_host parameter is invalid."
   }
 }
 
 variable "worker_encryption_at_host" {
   description = "Specifies whether master virtual machines are encrypted at host."
-  default  = "Disabled" 
+  default     = "Disabled"
   validation {
-    condition = contains(["Disabled", "Enabled"], var.worker_encryption_at_host)
+    condition     = contains(["Disabled", "Enabled"], var.worker_encryption_at_host)
     error_message = "The value of the worker_encryption_at_host parameter is invalid."
   }
 }

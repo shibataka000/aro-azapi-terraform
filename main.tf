@@ -30,7 +30,7 @@ resource "random_string" "resource_prefix" {
   length  = 6
   special = false
   upper   = false
-  numeric  = false
+  numeric = false
 }
 
 resource "azurerm_virtual_network" "virtual_network" {
@@ -39,47 +39,47 @@ resource "azurerm_virtual_network" "virtual_network" {
   location            = var.location
   resource_group_name = var.resource_group_name
   tags                = var.tags
-  
+
   lifecycle {
     ignore_changes = [
-        tags
+      tags
     ]
   }
 }
 
 resource "azurerm_subnet" "master_subnet" {
-  name                                           = var.master_subnet_name
-  resource_group_name                            = var.resource_group_name
-  virtual_network_name                           = azurerm_virtual_network.virtual_network.name
-  address_prefixes                               = var.master_subnet_address_space
-  private_link_service_network_policies_enabled  = false
-  service_endpoints                              = ["Microsoft.ContainerRegistry"]
+  name                                          = var.master_subnet_name
+  resource_group_name                           = var.resource_group_name
+  virtual_network_name                          = azurerm_virtual_network.virtual_network.name
+  address_prefixes                              = var.master_subnet_address_space
+  private_link_service_network_policies_enabled = false
+  service_endpoints                             = ["Microsoft.ContainerRegistry"]
 }
 
 resource "azurerm_subnet" "worker_subnet" {
-  name                                           = var.worker_subnet_name
-  resource_group_name                            = var.resource_group_name
-  virtual_network_name                           = azurerm_virtual_network.virtual_network.name
-  address_prefixes                               = var.worker_subnet_address_space
-  service_endpoints                              = ["Microsoft.ContainerRegistry"]
+  name                 = var.worker_subnet_name
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = azurerm_virtual_network.virtual_network.name
+  address_prefixes     = var.worker_subnet_address_space
+  service_endpoints    = ["Microsoft.ContainerRegistry"]
 }
 
 resource "azurerm_role_assignment" "aro_cluster_service_principal_network_contributor" {
-  scope                = azurerm_virtual_network.virtual_network.id
-  role_definition_name = "Contributor"
-  principal_id         = var.aro_cluster_aad_sp_object_id
+  scope                            = azurerm_virtual_network.virtual_network.id
+  role_definition_name             = "Contributor"
+  principal_id                     = var.aro_cluster_aad_sp_object_id
   skip_service_principal_aad_check = true
 }
 
 resource "azurerm_role_assignment" "aro_resource_provider_service_principal_network_contributor" {
-  scope                = azurerm_virtual_network.virtual_network.id
-  role_definition_name = "Contributor"
-  principal_id         = var.aro_rp_aad_sp_object_id
+  scope                            = azurerm_virtual_network.virtual_network.id
+  role_definition_name             = "Contributor"
+  principal_id                     = var.aro_rp_aad_sp_object_id
   skip_service_principal_aad_check = true
 }
 
 data "azurerm_resource_group" "resource_group" {
-  name                = var.resource_group_name
+  name = var.resource_group_name
 }
 
 resource "azapi_resource" "aro_cluster" {
@@ -88,7 +88,7 @@ resource "azapi_resource" "aro_cluster" {
   parent_id = data.azurerm_resource_group.resource_group.id
   type      = "Microsoft.RedHatOpenShift/openShiftClusters@2022-04-01"
   tags      = var.tags
-  
+
   body = jsonencode({
     properties = {
       clusterProfile = {
@@ -98,35 +98,35 @@ resource "azapi_resource" "aro_cluster" {
         pullSecret           = var.pull_secret
       }
       networkProfile = {
-        podCidr              = var.pod_cidr
-        serviceCidr          = var.service_cidr
+        podCidr     = var.pod_cidr
+        serviceCidr = var.service_cidr
       }
       servicePrincipalProfile = {
-        clientId             = var.aro_cluster_aad_sp_client_id
-        clientSecret         = var.aro_cluster_aad_sp_client_secret
+        clientId     = var.aro_cluster_aad_sp_client_id
+        clientSecret = var.aro_cluster_aad_sp_client_secret
       }
       masterProfile = {
-        vmSize               = var.master_node_vm_size
-        subnetId             = azurerm_subnet.master_subnet.id
-        encryptionAtHost     = var.master_encryption_at_host
+        vmSize           = var.master_node_vm_size
+        subnetId         = azurerm_subnet.master_subnet.id
+        encryptionAtHost = var.master_encryption_at_host
       }
       workerProfiles = [
         {
-          name               = var.worker_profile_name
-          vmSize             = var.worker_node_vm_size
-          diskSizeGB         = var.worker_node_vm_disk_size
-          subnetId           = azurerm_subnet.worker_subnet.id
-          count              = var.worker_node_count
-          encryptionAtHost   = var.worker_encryption_at_host
+          name             = var.worker_profile_name
+          vmSize           = var.worker_node_vm_size
+          diskSizeGB       = var.worker_node_vm_disk_size
+          subnetId         = azurerm_subnet.worker_subnet.id
+          count            = var.worker_node_count
+          encryptionAtHost = var.worker_encryption_at_host
         }
       ]
       apiserverProfile = {
-        visibility           = var.api_server_visibility
+        visibility = var.api_server_visibility
       }
       ingressProfiles = [
         {
-          name               = var.ingress_profile_name
-          visibility         = var.ingress_visibility
+          name       = var.ingress_profile_name
+          visibility = var.ingress_visibility
         }
       ]
     }
@@ -134,7 +134,7 @@ resource "azapi_resource" "aro_cluster" {
 
   lifecycle {
     ignore_changes = [
-        tags
+      tags
     ]
   }
 }
