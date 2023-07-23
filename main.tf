@@ -10,6 +10,12 @@ terraform {
       version = ">=1.0.0"
     }
   }
+  backend "azurerm" {
+    resource_group_name  = "terraform"
+    storage_account_name = "sbtktfstate"
+    container_name       = "tfstate"
+    key                  = "aro-azapi-terraform/aro-azapi-terraform.tfstate"
+  }
 }
 
 provider "azurerm" {
