@@ -348,3 +348,16 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# Terraform generated files
+terraform.tfstate
+terraform.tfstate.backup
+.terraform
+.terraform.lock.hcl
+
+# deploy.sh generated files
+app-service-principal.json
+main.tfplan
+
+# Pull secret
+pull-secret.txt
