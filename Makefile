@@ -2,7 +2,8 @@ LOCATION=japaneast
 RESOURCE_GROUP_NAME=aro-sample-RG
 SERVICE_PRINCIPAL_NAME=aro-sample-aro-sp
 SERVICE_PRINCIPAL_FILE_NAME=app-service-principal.json
-SERVICE_PRINCIPAL_OBJECT_ID=$(shell jq -r '.appId' $(SERVICE_PRINCIPAL_FILE_NAME) | xargs az ad sp show --id | jq -r '.id')
+SERVICE_PRINCIPAL_CLIENT_ID=$(shell jq -r '.appId' $(SERVICE_PRINCIPAL_FILE_NAME))
+SERVICE_PRINCIPAL_OBJECT_ID=$(shell az ad sp show --id $(SERVICE_PRINCIPAL_CLIENT_ID) | jq -r '.id')
 TENANT_ID=$(shell az account show --query id --output tsv)
 
 # default
@@ -51,6 +52,7 @@ delete-resource-group:
 
 delete-service-principal:
 	az ad sp delete --id $(SERVICE_PRINCIPAL_OBJECT_ID)
+	az ad app delete --id $(SERVICE_PRINCIPAL_CLIENT_ID)
 	rm $(SERVICE_PRINCIPAL_FILE_NAME)
 
 unassign-user-access-administrator-role-to-service-principal:
