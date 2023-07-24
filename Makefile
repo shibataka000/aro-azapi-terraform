@@ -3,6 +3,7 @@ RESOURCE_GROUP_NAME=aro-sample-RG
 SERVICE_PRINCIPAL_NAME=aro-sample-aro-sp
 SERVICE_PRINCIPAL_FILE_NAME=app-service-principal.json
 SERVICE_PRINCIPAL_OBJECT_ID=$(shell jq -r '.appId' $(SERVICE_PRINCIPAL_FILE_NAME) | xargs az ad sp show --id | jq -r '.id')
+TENANT_ID=$(shell az account show --query id --output tsv)
 
 # default
 
@@ -31,10 +32,10 @@ $(SERVICE_PRINCIPAL_FILE_NAME):
 create-service-principal: $(SERVICE_PRINCIPAL_FILE_NAME)
 
 assign-user-access-administrator-role-to-service-principal: $(SERVICE_PRINCIPAL_FILE_NAME)
-	az role assignment create --role 'User Access Administrator' --assignee-object-id $(SERVICE_PRINCIPAL_OBJECT_ID) --resource-group $(RESOURCE_GROUP_NAME) --assignee-principal-type 'ServicePrincipal'
+	az role assignment create --role 'User Access Administrator' --assignee-object-id $(SERVICE_PRINCIPAL_OBJECT_ID) --scope "/subscriptions/$(TENANT_ID)/resourceGroups/$(RESOURCE_GROUP_NAME)" --assignee-principal-type 'ServicePrincipal'
 
 assign-contributor-role-to-service-principal: $(SERVICE_PRINCIPAL_FILE_NAME)
-	az role assignment create --role 'Contributor' --assignee-object-id $(SERVICE_PRINCIPAL_OBJECT_ID) --resource-group $(RESOURCE_GROUP_NAME) --assignee-principal-type 'ServicePrincipal'
+	az role assignment create --role 'Contributor' --assignee-object-id $(SERVICE_PRINCIPAL_OBJECT_ID) --scope "/subscriptions/$(TENANT_ID)/resourceGroups/$(RESOURCE_GROUP_NAME)" --assignee-principal-type 'ServicePrincipal'
 
 terraform-init:
 	terraform init
