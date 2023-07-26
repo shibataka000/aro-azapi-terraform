@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">=3.66.0"
     }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = ">=2.40.0"
+    }
     azapi = {
       source  = "Azure/azapi"
       version = ">=1.7.0"
@@ -29,7 +33,10 @@ data "azurerm_client_config" "current" {
 }
 
 locals {
-  resource_group_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/aro-${var.domain}-${var.location}"
+  resource_group_id                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/aro-${var.domain}-${var.location}"
+  app_service_principal            = jsondecode(file(var.aro_cluster_aad_sp_file_name))
+  aro_cluster_aad_sp_client_id     = local.app_service_principal["appId"]
+  aro_cluster_aad_sp_client_secret = local.app_service_principal["password"]
 }
 
 resource "azurerm_virtual_network" "virtual_network" {
@@ -63,17 +70,25 @@ resource "azurerm_subnet" "worker_subnet" {
   service_endpoints    = ["Microsoft.ContainerRegistry"]
 }
 
+data "azuread_service_principal" "aro_cluster" {
+  application_id = local.aro_cluster_aad_sp_client_id
+}
+
+data "azuread_service_principal" "aro_rp" {
+  display_name = var.aro_rp_aad_sp_display_name
+}
+
 resource "azurerm_role_assignment" "aro_cluster_service_principal_network_contributor" {
   scope                            = azurerm_virtual_network.virtual_network.id
   role_definition_name             = "Contributor"
-  principal_id                     = var.aro_cluster_aad_sp_object_id
+  principal_id                     = data.azuread_service_principal.aro_cluster.object_id
   skip_service_principal_aad_check = true
 }
 
 resource "azurerm_role_assignment" "aro_resource_provider_service_principal_network_contributor" {
   scope                            = azurerm_virtual_network.virtual_network.id
   role_definition_name             = "Contributor"
-  principal_id                     = var.aro_rp_aad_sp_object_id
+  principal_id                     = data.azuread_service_principal.aro_rp.object_id
   skip_service_principal_aad_check = true
 }
 
@@ -94,15 +109,15 @@ resource "azapi_resource" "aro_cluster" {
         domain               = var.domain
         fipsValidatedModules = var.fips_validated_modules
         resourceGroupId      = local.resource_group_id
-        pullSecret           = var.pull_secret
+        pullSecret           = file(var.pull_secret_file_name)
       }
       networkProfile = {
         podCidr     = var.pod_cidr
         serviceCidr = var.service_cidr
       }
       servicePrincipalProfile = {
-        clientId     = var.aro_cluster_aad_sp_client_id
-        clientSecret = var.aro_cluster_aad_sp_client_secret
+        clientId     = local.aro_cluster_aad_sp_client_id
+        clientSecret = local.aro_cluster_aad_sp_client_secret
       }
       masterProfile = {
         vmSize           = var.master_node_vm_size
@@ -135,5 +150,10 @@ resource "azapi_resource" "aro_cluster" {
     ignore_changes = [
       tags
     ]
+  }
+
+  timeouts {
+    create = "60m"
+    delete = "60m"
   }
 }

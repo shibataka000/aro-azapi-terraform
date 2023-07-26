@@ -20,8 +20,9 @@ variable "domain" {
   type        = string
 }
 
-variable "pull_secret" {
-  description = "Specifies the pull secret from cloud.redhat.com. The JSON should be provided as a string."
+variable "pull_secret_file_name" {
+  description = "Specifies the pull secret file name from cloud.redhat.com. The JSON should be provided as a string."
+  default     = "pull-secret.txt"
   type        = string
 }
 
@@ -157,22 +158,14 @@ variable "worker_encryption_at_host" {
   }
 }
 
-variable "aro_cluster_aad_sp_client_id" {
-  description = "Specifies the client id of the service principal of the Azure Red Hat OpenShift cluster."
+variable "aro_cluster_aad_sp_file_name" {
+  description = "Specifies the file name of the service principal of the Azure Red Hat OpenShift cluster."
+  default     = "app-service-principal.json"
   type        = string
 }
 
-variable "aro_cluster_aad_sp_client_secret" {
-  description = "Specifies the client secret of the service principal of the Azure Red Hat OpenShift cluster."
-  type        = string
-}
-
-variable "aro_cluster_aad_sp_object_id" {
-  description = "Specifies the object id of the service principal of the Azure Red Hat OpenShift cluster."
-  type        = string
-}
-
-variable "aro_rp_aad_sp_object_id" {
-  description = "Specifies the object id of the service principal of the ARO resource provider."
+variable "aro_rp_aad_sp_display_name" {
+  description = "Specifies the display name of the service principal of the ARO resource provider."
+  default     = "Azure Red Hat OpenShift RP"
   type        = string
 }
