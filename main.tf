@@ -39,11 +39,16 @@ locals {
   aro_cluster_aad_sp_client_secret = local.app_service_principal["password"]
 }
 
+resource "azurerm_resource_group" "aro_cluster" {
+  name     = var.resource_group_name
+  location = var.location
+}
+
 resource "azurerm_virtual_network" "virtual_network" {
   name                = "${var.resource_prefix}VNet"
   address_space       = var.virtual_network_address_space
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.aro_cluster.location
+  resource_group_name = azurerm_resource_group.aro_cluster.name
   tags                = var.tags
 
   lifecycle {
@@ -55,7 +60,7 @@ resource "azurerm_virtual_network" "virtual_network" {
 
 resource "azurerm_subnet" "master_subnet" {
   name                                          = var.master_subnet_name
-  resource_group_name                           = var.resource_group_name
+  resource_group_name                           = azurerm_resource_group.aro_cluster.name
   virtual_network_name                          = azurerm_virtual_network.virtual_network.name
   address_prefixes                              = var.master_subnet_address_space
   private_link_service_network_policies_enabled = false
@@ -64,7 +69,7 @@ resource "azurerm_subnet" "master_subnet" {
 
 resource "azurerm_subnet" "worker_subnet" {
   name                 = var.worker_subnet_name
-  resource_group_name  = var.resource_group_name
+  resource_group_name  = azurerm_resource_group.aro_cluster.name
   virtual_network_name = azurerm_virtual_network.virtual_network.name
   address_prefixes     = var.worker_subnet_address_space
   service_endpoints    = ["Microsoft.ContainerRegistry"]
@@ -76,6 +81,22 @@ data "azuread_service_principal" "aro_cluster" {
 
 data "azuread_service_principal" "aro_rp" {
   display_name = var.aro_rp_aad_sp_display_name
+}
+
+# az role assignment create --role 'User Access Administrator' --assignee-object-id $(SERVICE_PRINCIPAL_OBJECT_ID) --resource-group $(RESOURCE_GROUP_NAME) --assignee-principal-type 'ServicePrincipal'
+resource "azurerm_role_assignment" "aro_cluster_service_principal_resource_group_user_access_administrator" {
+  scope                            = azurerm_resource_group.aro_cluster.id
+  role_definition_name             = "User Access Administrator"
+  principal_id                     = data.azuread_service_principal.aro_cluster.object_id
+  skip_service_principal_aad_check = true
+}
+
+# az role assignment create --role 'Contributor' --assignee-object-id $(SERVICE_PRINCIPAL_OBJECT_ID) --resource-group $(RESOURCE_GROUP_NAME) --assignee-principal-type 'ServicePrincipal'
+resource "azurerm_role_assignment" "aro_cluster_service_principal_resource_group_contributor" {
+  scope                            = azurerm_resource_group.aro_cluster.id
+  role_definition_name             = "Contributor"
+  principal_id                     = data.azuread_service_principal.aro_cluster.object_id
+  skip_service_principal_aad_check = true
 }
 
 resource "azurerm_role_assignment" "aro_cluster_service_principal_network_contributor" {
@@ -92,14 +113,10 @@ resource "azurerm_role_assignment" "aro_resource_provider_service_principal_netw
   skip_service_principal_aad_check = true
 }
 
-data "azurerm_resource_group" "resource_group" {
-  name = var.resource_group_name
-}
-
 resource "azapi_resource" "aro_cluster" {
   name      = "${var.resource_prefix}Aro"
-  location  = var.location
-  parent_id = data.azurerm_resource_group.resource_group.id
+  location  = azurerm_resource_group.aro_cluster.location
+  parent_id = azurerm_resource_group.aro_cluster.id
   type      = "Microsoft.RedHatOpenShift/openShiftClusters@2022-04-01"
   tags      = var.tags
 
