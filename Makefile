@@ -24,15 +24,6 @@ register-providers:
 terraform-init:
 	terraform init
 
-# destroy
-
-.PHONY: destroy terraform-destroy
-
-destroy: terraform-destroy delete-service-principal
-
-terraform-destroy:
-	terraform destroy -auto-approve
-
 # plan
 
 .PHONY: plan terraform-plan
@@ -50,6 +41,15 @@ apply: terraform-apply
 
 terraform-apply: create-service-principal
 	terraform apply -auto-approve
+
+# destroy
+
+.PHONY: destroy terraform-destroy
+
+destroy: terraform-destroy delete-service-principal
+
+terraform-destroy:
+	terraform destroy -auto-approve
 
 # service principal
 
