@@ -69,7 +69,10 @@ $(SERVICE_PRINCIPAL_FILE_NAME):
 
 # credentials
 
-.PHONY: get-credentials
+.PHONY: get-credentials get-console-url
 
 get-credentials:
 	az aro list-credentials --name $(ARO_CLUSTER_NAME) --resource-group $(RESOURCE_GROUP_NAME)
+
+get-console-url:
+	az aro show --name $(ARO_CLUSTER_NAME) --resource-group $(RESOURCE_GROUP_NAME) --query "consoleProfile.url" -o tsv
