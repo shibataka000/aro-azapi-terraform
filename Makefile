@@ -2,6 +2,8 @@ SERVICE_PRINCIPAL_NAME=aro-sample-aro-sp
 SERVICE_PRINCIPAL_FILE_NAME=app-service-principal.json
 SERVICE_PRINCIPAL_CLIENT_ID=$(shell jq -r '.appId' $(SERVICE_PRINCIPAL_FILE_NAME))
 SERVICE_PRINCIPAL_OBJECT_ID=$(shell az ad sp show --id $(SERVICE_PRINCIPAL_CLIENT_ID) | jq -r '.id')
+RESOURCE_GROUP_NAME=aro-sample-RG
+ARO_CLUSTER_NAME=aro-sample-Aro
 
 # default
 
@@ -64,3 +66,10 @@ delete-service-principal:
 
 $(SERVICE_PRINCIPAL_FILE_NAME):
 	az ad sp create-for-rbac --name $(SERVICE_PRINCIPAL_NAME) > $(SERVICE_PRINCIPAL_FILE_NAME)
+
+# credentials
+
+.PHONY: get-credentials
+
+get-credentials:
+	az aro list-credentials --name $(ARO_CLUSTER_NAME) --resource-group $(RESOURCE_GROUP_NAME)
