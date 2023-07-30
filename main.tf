@@ -174,3 +174,7 @@ resource "azapi_resource" "aro_cluster" {
     delete = "60m"
   }
 }
+
+output "aro_cluster_console_url" {
+  value = "https://console-openshift-console.apps.${var.domain}.${var.location}.aroapp.io"
+}
