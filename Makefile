@@ -11,9 +11,9 @@ default:
 
 # init
 
-.PHONY: init register-providers create-service-principal terraform-init
+.PHONY: init register-providers terraform-init
 
-init: register-providers create-service-principal terraform-init
+init: register-providers terraform-init
 
 register-providers:
 	az provider register --namespace 'Microsoft.RedHatOpenShift' --wait
@@ -21,24 +21,14 @@ register-providers:
 	az provider register --namespace 'Microsoft.Storage' --wait
 	az provider register --namespace 'Microsoft.Authorization' --wait
 
-$(SERVICE_PRINCIPAL_FILE_NAME):
-	az ad sp create-for-rbac --name $(SERVICE_PRINCIPAL_NAME) > $(SERVICE_PRINCIPAL_FILE_NAME)
-
-create-service-principal: $(SERVICE_PRINCIPAL_FILE_NAME)
-
 terraform-init:
 	terraform init
 
 # destroy
 
-.PHONY: destroy terraform-destroy delete-service-principal
+.PHONY: destroy terraform-destroy
 
 destroy: terraform-destroy delete-service-principal
-
-delete-service-principal:
-	az ad sp delete --id $(SERVICE_PRINCIPAL_OBJECT_ID)
-	az ad app delete --id $(SERVICE_PRINCIPAL_CLIENT_ID)
-	rm $(SERVICE_PRINCIPAL_FILE_NAME)
 
 terraform-destroy:
 	terraform destroy -auto-approve
@@ -49,7 +39,7 @@ terraform-destroy:
 
 plan: terraform-plan
 
-terraform-plan:
+terraform-plan: create-service-principal
 	terraform plan
 
 # apply
@@ -58,5 +48,19 @@ terraform-plan:
 
 apply: terraform-apply
 
-terraform-apply:
+terraform-apply: create-service-principal
 	terraform apply -auto-approve
+
+# service principal
+
+.PHONY: create-service-principal delete-service-principal
+
+create-service-principal: $(SERVICE_PRINCIPAL_FILE_NAME)
+
+delete-service-principal:
+	az ad sp delete --id $(SERVICE_PRINCIPAL_OBJECT_ID)
+	az ad app delete --id $(SERVICE_PRINCIPAL_CLIENT_ID)
+	rm $(SERVICE_PRINCIPAL_FILE_NAME)
+
+$(SERVICE_PRINCIPAL_FILE_NAME):
+	az ad sp create-for-rbac --name $(SERVICE_PRINCIPAL_NAME) > $(SERVICE_PRINCIPAL_FILE_NAME)
